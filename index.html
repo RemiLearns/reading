@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Remi's Jungle Quest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night: #142B1E;
+    --night2: #1F4A32;
+    --star: #FFC94A;
+    --rocket: #FF6B4A;
+    --aqua: #3FBF8F;
+    --lav: #BFE0B8;
+    --cream: #FBF8F1;
+    --green: #7BD389;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background: radial-gradient(circle at 20% 10%, #2E6B44 0%, var(--night) 45%, #0A1B12 100%);
+    font-family:'Nunito', sans-serif;
+    color: var(--cream);
+    overflow-x:hidden;
+    position:relative;
+  }
+  .stars-bg{ position:fixed; inset:0; z-index:0; pointer-events:none; }
+  .star-dot{ position:absolute; background: var(--star); border-radius:50%; opacity:.5; animation: twinkle 3s infinite ease-in-out; }
+  @keyframes twinkle{ 0%,100%{opacity:.2;} 50%{opacity:.9;} }
+
+  .wrap{ position:relative; z-index:1; max-width:640px; margin:0 auto; padding:20px 16px 60px; }
+
+  header{ text-align:center; margin-bottom:14px; }
+  h1{ font-family:'Baloo 2', cursive; font-size:1.8rem; margin: 6px 0 2px; color: var(--star); text-shadow: 0 2px 0 rgba(0,0,0,.25); }
+  .subtitle{ font-size:.92rem; color: var(--lav); margin:0; }
+
+  nav.tabs{ display:flex; gap:8px; justify-content:center; margin:16px 0 10px; flex-wrap:wrap; }
+  .tab-btn{
+    font-family:'Baloo 2', cursive; font-size:.95rem; padding:10px 16px; border-radius:999px;
+    border:2px solid rgba(255,255,255,.15); background: rgba(255,255,255,.06); color: var(--cream);
+    cursor:pointer; transition: all .15s ease;
+  }
+  .tab-btn.active{ background: var(--star); color:#4A3300; border-color: var(--star); }
+
+  .progress-shell{
+    background: rgba(255,255,255,.08); border-radius: 999px; height: 18px; margin: 10px 0 6px;
+    position: relative; overflow: hidden; border: 2px solid rgba(255,255,255,.15);
+  }
+  .progress-fill{ height:100%; background: linear-gradient(90deg, var(--rocket), var(--star)); border-radius: 999px; transition: width .6s ease; }
+  .rocket-marker{ position:absolute; top:-15px; font-size:1.4rem; transform: translateX(-50%); transition: left .6s ease; }
+  .star-count{ text-align:center; font-family:'Baloo 2', cursive; font-size:1.05rem; color:var(--star); margin-bottom:6px; }
+
+  .card{ background: var(--night2); border-radius: 22px; padding: 24px 20px 20px; box-shadow: 0 10px 30px rgba(0,0,0,.35); border: 2px solid rgba(255,255,255,.08); }
+
+  .instruction{ text-align:center; font-size: 1.02rem; color: var(--cream); margin: 0 0 16px; }
+  .instruction b{ color: var(--star); }
+
+  .word-row{ display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin: 10px 0 18px; }
+  .tile{
+    width:46px; height:54px; background: var(--cream); color: var(--night); border-radius: 12px;
+    display:flex; align-items:center; justify-content:center; font-family:'Baloo 2', cursive; font-size:1.5rem;
+    cursor:pointer; border: 3px solid transparent; user-select:none;
+    transition: transform .15s ease, background .2s ease, border-color .2s ease;
+  }
+  .tile:hover{ transform: translateY(-3px); }
+  .tile.selected{ background: var(--aqua); border-color:#2E9E96; color:#0A2622; }
+  .tile.correct{ background: var(--green); border-color:#3F9450; color:#0A2211; }
+  .tile.wrong-shake{ animation: shake .4s; background:#F3A6A0; }
+  @keyframes shake{ 0%,100%{ transform:translateX(0); } 25%{ transform:translateX(-6px); } 75%{ transform:translateX(6px); } }
+
+  .controls{ display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:6px;}
+  button{
+    font-family:'Baloo 2', cursive; font-size:1rem; border:none; padding: 12px 22px; border-radius: 999px;
+    cursor:pointer; font-weight:700; transition: transform .12s ease, filter .15s ease;
+  }
+  button:active{ transform: scale(.96); }
+  .btn-sound{ background: var(--lav); color:#26205E; }
+  .btn-check{ background: var(--star); color:#4A3300; }
+  .btn-next{ background: var(--rocket); color:#fff; }
+  .btn-restart{ background: var(--aqua); color:#0A2622; }
+  .btn-hint{ background: rgba(255,255,255,.12); color: var(--cream); }
+  button:disabled{ opacity:.4; cursor:not-allowed; }
+  button:hover:not(:disabled){ filter: brightness(1.08); }
+
+  .feedback{ text-align:center; min-height: 54px; margin-top: 14px; font-size: 1rem; }
+  .feedback .grapheme-fact{ background: rgba(255,209,102,.12); border: 1px dashed var(--star); border-radius: 14px; padding: 10px 14px; display:inline-block; }
+  .feedback .grapheme-fact b{ color: var(--star); }
+  .hint{ color: var(--lav); font-size:.9rem; margin-top:4px; }
+
+  .finale{ text-align:center; padding: 30px 10px; }
+  .finale .rocket-big{ font-size: 4rem; display:block; margin-bottom:6px; }
+  .finale h2{ font-family:'Baloo 2', cursive; color: var(--star); font-size:1.6rem; }
+
+  .planet-row{ display:flex; justify-content:center; gap:6px; margin-top:6px; margin-bottom:6px;}
+  .planet{ font-size:1.2rem; opacity:.3; }
+  .planet.reached{ opacity:1; }
+
+  /* Stages */
+  .stage-nav{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:14px; }
+  .stage-btn{
+    font-family:'Baloo 2', cursive; font-size:.88rem; padding:8px 14px; border-radius:999px;
+    border:2px solid rgba(255,255,255,.15); background: rgba(255,255,255,.05); color: var(--lav); cursor:pointer;
+  }
+  .stage-btn.active{ background: var(--aqua); border-color: var(--aqua); color:#0A2622; }
+  .stage-btn.done::after{ content:' ✓'; }
+  .stage-desc{ text-align:center; font-size:.85rem; color: var(--lav); margin: -6px 0 14px; }
+
+  .stage-progress-track{ position:relative; margin: 0 0 18px; }
+  .stage-progress-shell{ background: rgba(255,255,255,.08); border-radius:999px; height:14px; overflow:hidden; border:2px solid rgba(255,255,255,.12); }
+  .stage-progress-fill{ height:100%; background: linear-gradient(90deg, var(--aqua), var(--star)); border-radius:999px; transition: width .5s ease; }
+  .stage-target-marker{ position:absolute; top:-20px; font-size:1rem; transform:translateX(-50%); }
+
+  .confetti-burst{ position:relative; height:0; overflow:visible; }
+  .confetti-piece{ position:absolute; top:0; left:50%; font-size:1.4rem; opacity:0; animation: confetti-fall 1.1s ease-out forwards; }
+  @keyframes confetti-fall{
+    0%{ opacity:1; transform: translate(0,0) rotate(0deg) scale(1); }
+    100%{ opacity:0; transform: translate(var(--dx), 70px) rotate(var(--rot)) scale(.8); }
+  }
+  .milestone-card{
+    background: linear-gradient(135deg, var(--aqua) 0%, var(--star) 100%);
+    border-radius:24px; padding:4px; text-align:center; box-shadow:0 12px 28px rgba(255,209,102,.25);
+  }
+  .milestone-inner{ background: var(--night2); border-radius:20px; padding:28px 20px; }
+  .milestone-inner .big{ font-size:3rem; display:block; margin-bottom:6px; }
+  .milestone-inner h2{ font-family:'Baloo 2', cursive; color: var(--star); font-size:1.4rem; margin:4px 0 8px; }
+
+  /* Story mode */
+  .story-title{ font-family:'Baloo 2', cursive; color: var(--star); font-size:1.3rem; text-align:center; margin: 0 0 6px; }
+  .story-text{ font-size:1.15rem; line-height:2.1; text-align:left; padding: 4px 2px 10px; }
+  .story-text span.word{ cursor:pointer; padding: 2px 3px; border-radius:6px; transition: background .15s ease, color .15s ease; }
+  .story-text span.word:hover{ background: rgba(255,255,255,.1); }
+  .story-text span.word.found{ background: var(--green); color:#0A2211; font-weight:800; }
+  .story-text span.word.miss{ background: #F3A6A0; }
+  .story-progress{ text-align:center; color: var(--lav); font-size:.9rem; margin-bottom:10px; }
+  .story-nav{ display:flex; justify-content:center; gap:8px; margin-top:14px; flex-wrap:wrap; }
+  .story-dot{ width:10px; height:10px; border-radius:50%; background: rgba(255,255,255,.2); display:inline-block; }
+  .story-dot.done{ background: var(--star); }
+
+  /* Story phases: hunt -> reading challenge -> spelling challenge */
+  .phase-label{ text-align:center; font-family:'Baloo 2', cursive; font-size:.85rem; letter-spacing:.06em; text-transform:uppercase; color: var(--aqua); margin: 0 0 6px; }
+  .read-word{ text-align:center; font-family:'Baloo 2', cursive; font-size:2rem; color: var(--star); margin: 10px 0; letter-spacing:.02em; }
+  .chunk-display{ text-align:center; font-family:'Baloo 2', cursive; font-size:1.6rem; color: var(--aqua); margin: 6px 0 14px; letter-spacing:.03em; }
+  .read-options{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin: 14px 0; }
+  .read-option-btn{
+    font-family:'Baloo 2', cursive; font-size:1.05rem; padding:14px 8px; border-radius:14px; text-align:center;
+    background: var(--cream); color: var(--night); border:3px solid transparent; cursor:pointer;
+  }
+  .read-option-btn.correct{ background: var(--green); border-color:#3F9450; }
+  .read-option-btn.wrong{ background:#F3A6A0; border-color:#C15A52; opacity:.5; pointer-events:none; }
+  .read-prompt{ text-align:center; font-size:.92rem; color: var(--lav); margin: 4px 0 0; }
+
+  /* Spelling mode */
+  .spell-prompt{ text-align:center; margin: 6px 0 16px; }
+  .spell-input{
+    width:100%; max-width:280px; display:block; margin: 0 auto; text-align:center;
+    font-family:'Baloo 2', cursive; font-size:1.4rem; letter-spacing:3px; padding: 12px; border-radius:12px;
+    border: 3px solid rgba(255,255,255,.2); background: var(--cream); color: var(--night);
+  }
+  .spell-input:focus{ outline:none; border-color: var(--aqua); }
+  .spell-answer-shown{ text-align:center; font-size:1.6rem; font-family:'Baloo 2', cursive; margin-top:10px; }
+  .spell-answer-shown .g{ color: var(--star); }
+
+  /* Parent dashboard */
+  .gate-box{ text-align:center; padding: 10px 6px; }
+  .gate-box p{ color: var(--lav); font-size:.92rem; }
+  .gate-input{
+    width:120px; text-align:center; font-family:'Baloo 2', cursive; font-size:1.3rem;
+    padding:10px; border-radius:12px; border:3px solid rgba(255,255,255,.2); background: var(--cream); color: var(--night);
+  }
+  .stat-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin: 14px 0; }
+  .stat-box{ background: rgba(255,255,255,.06); border-radius:14px; padding:12px; text-align:center; }
+  .stat-box .num{ font-family:'Baloo 2', cursive; font-size:1.4rem; color: var(--star); }
+  .stat-box .lbl{ font-size:.78rem; color: var(--lav); }
+  .section-title{ font-family:'Baloo 2', cursive; color: var(--star); font-size:1.05rem; margin: 16px 0 8px; }
+  table.grapheme-table{ width:100%; border-collapse: collapse; font-size:.9rem; }
+  table.grapheme-table th, table.grapheme-table td{ text-align:left; padding: 6px 4px; border-bottom: 1px solid rgba(255,255,255,.08); }
+  table.grapheme-table th{ color: var(--lav); font-weight:700; font-size:.78rem; text-transform:uppercase; letter-spacing:.03em; }
+  .status-pill{ padding:3px 9px; border-radius:999px; font-size:.75rem; font-weight:800; display:inline-block; }
+  .status-mastered{ background: var(--green); color:#0A2211; }
+  .status-practising{ background: var(--star); color:#4A3300; }
+  .status-support{ background: #F3A6A0; color:#5C1410; }
+  .tricky-list{ display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+  .tricky-chip{ background: rgba(243,166,160,.18); border:1px solid #F3A6A0; color: var(--cream); padding:4px 10px; border-radius:999px; font-size:.85rem; }
+  .empty-note{ color: var(--lav); font-size:.88rem; text-align:center; padding: 10px 0; }
+
+  footer{ text-align:center; margin-top:22px; font-size:.8rem; color: rgba(255,255,255,.4); }
+</style>
+</head>
+<body>
+<div class="stars-bg" id="starsBg"></div>
+<div class="wrap">
+  <header>
+    <div style="font-size:2.2rem;">🌴</div>
+    <h1>Remi's Jungle Quest</h1>
+    <p class="subtitle" id="subtitleText">Tap the letters that make one sound — swing through the jungle collecting stars!</p>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn" id="tabHunt" onclick="switchMode('hunt')">🔍 Sound Hunt</button>
+    <button class="tab-btn" id="tabStory" onclick="switchMode('story')">📖 Story Time</button>
+    <button class="tab-btn" id="tabSpell" onclick="switchMode('spell')">✏️ Spelling Stars</button>
+    <button class="tab-btn" id="tabParent" onclick="switchMode('parent')">👪 Parents</button>
+  </nav>
+
+  <div class="star-count" id="starCount">⭐ 0 / 46 stars</div>
+  <div class="progress-shell">
+    <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    <div class="rocket-marker" id="rocketMarker" style="left:0%">🐒</div>
+  </div>
+  <p style="text-align:center; font-size:.72rem; color:rgba(255,255,255,.35); margin:0 0 4px;">This bar is for the current round — see the Parents tab for Remi's all-time total</p>
+  <div class="planet-row">
+    <span class="planet" id="p1">🌿</span>
+    <span class="planet" id="p2">🗿</span>
+    <span class="planet" id="p3">💎</span>
+  </div>
+
+  <div id="game" style="margin-top:14px;"></div>
+</div>
+
+<script>
+// ---------- background stars ----------
+const bg = document.getElementById('starsBg');
+for(let i=0;i<60;i++){
+  const s = document.createElement('div');
+  s.className = 'star-dot';
+  const size = Math.random()*2.5+1;
+  s.style.width = size+'px'; s.style.height = size+'px';
+  s.style.left = Math.random()*100+'%'; s.style.top = Math.random()*100+'%';
+  s.style.animationDelay = (Math.random()*3)+'s';
+  bg.appendChild(s);
+}
+
+// ---------- shared data: the 21 focus words, grouped into 3 stages ----------
+// Stage 1: split digraphs (his current focus per the sound mat)
+// Stage 2: common vowel-team digraphs
+// Stage 3: trickier consonant digraphs, r-controlled and less common ones
+const WORDS = [
+  { word:'cake', target:[1,3], grapheme:'a-e', stage:1, fact:'a-e says /ai/ — the silent e makes the a say its name, like in cake, name, and gate.' },
+  { word:'bike', target:[1,3], grapheme:'i-e', stage:1, fact:'i-e says /igh/ — the silent e makes the i say its name, like in bike, time, and kite.' },
+  { word:'bone', target:[1,3], grapheme:'o-e', stage:1, fact:'o-e says /oa/ — like in bone, home, and rope.' },
+  { word:'cube', target:[1,3], grapheme:'u-e', stage:1, fact:'u-e says /yoo/ — like in cube, tube, and June.' },
+  { word:'these', target:[2,4], grapheme:'e-e', stage:1, fact:'e-e says /ee/ — like in these. It is a rarer split digraph, so well spotted!' },
+
+  { word:'day', target:[1,2], grapheme:'ay', stage:2, fact:'ay says /ai/ — used at the end of a word, like in day, play, and stay.' },
+  { word:'cloud', target:[2,3], grapheme:'ou', stage:2, fact:'ou says /ow/ — like in cloud, out, and shout.' },
+  { word:'tie', target:[1,2], grapheme:'ie', stage:2, fact:'ie says /igh/ — like in tie, pie, and lie.' },
+  { word:'tea', target:[1,2], grapheme:'ea', stage:2, fact:'ea says /ee/ — like in tea, sea, and read.' },
+  { word:'toy', target:[1,2], grapheme:'oy', stage:2, fact:'oy says /oi/ — used at the end of a word, like in toy, boy, and enjoy.' },
+  { word:'saw', target:[1,2], grapheme:'aw', stage:2, fact:'aw says /or/ — like in saw, paw, and yawn.' },
+  { word:'toe', target:[1,2], grapheme:'oe', stage:2, fact:'oe says /oa/ — like in toe and goes.' },
+  { word:'grey', target:[2,3], grapheme:'ey', stage:2, fact:'ey says /ai/ — like in grey and they.' },
+
+  { word:'bird', target:[1,2], grapheme:'ir', stage:3, fact:'ir says /er/ — like in bird, girl, and shirt.' },
+  { word:'blue', target:[2,3], grapheme:'ue', stage:3, fact:'ue says /oo/ — like in blue, glue, and true.' },
+  { word:'rescue', target:[4,5], grapheme:'ue', stage:3, fact:'ue says /yoo/ here — like in rescue and argue.' },
+  { word:'wheel', target:[0,1], grapheme:'wh', stage:3, fact:'wh says /w/ — like in wheel, when, and whale.' },
+  { word:'phone', target:[0,1], grapheme:'ph', stage:3, fact:'ph says /f/ — like in phone, dolphin, and photo.' },
+  { word:'chew', target:[2,3], grapheme:'ew', stage:3, fact:'ew says /oo/ — like in chew, new, and grew.' },
+  { word:'screw', target:[3,4], grapheme:'ew', stage:3, fact:'ew says /oo/ — like in screw and crew.' },
+  { word:'astronaut', target:[6,7], grapheme:'au', stage:3, fact:'au says /or/ — like in astronaut, launch, and August. Fitting for a rocket word!' },
+];
+
+const STAGE_INFO = {
+  1: { label:'Magic E', emoji:'🌺', desc:'Split digraphs — the silent e that changes everything' },
+  2: { label:'Vowel Teams', emoji:'🐒', desc:'Two letters that team up to make one sound' },
+  3: { label:'Tricky Sounds', emoji:'🐍', desc:'Trickier digraphs — consonants, and sounds that hide' },
+};
+
+// ---------- story data ----------
+const STORIES = [
+  {
+    title: "A Day to Play",
+    grapheme: "ay",
+    fact: "ay says /ai/ at the end of a word — like in day, play, stay and away.",
+    text: "One sunny day, Sam and Meg went out to play. A little bird flapped away over the bay. \"Let's stay and play by the bay,\" said Sam. They stayed until the sky turned grey.",
+    targets: ["day","play","away","bay","stay","stayed"]
+  },
+  {
+    title: "Blue's Rescue",
+    grapheme: "ue",
+    fact: "ue says /oo/ or /yoo/ — like in blue, true, rescue and Sue.",
+    text: "Sue and her dog Blue went for a walk. Blue saw a cat stuck up a tree. \"We must rescue that cat!\" said Sue. Sue and Blue were true heroes that day.",
+    targets: ["sue","blue","rescue","true"]
+  },
+  {
+    title: "The Astronaut's Big Launch",
+    grapheme: "au",
+    fact: "au says /or/ — like in astronaut, launch and August.",
+    text: "The astronaut put on her suit. She said, \"I will launch into space in August!\" Her friends cheered as the rocket went up with a loud roar. It was an amazing day for the brave astronaut.",
+    targets: ["astronaut","launch","august"]
+  },
+  {
+    title: "The Whistling Wheel",
+    grapheme: "wh",
+    fact: "wh says /w/ — like in wheel, when, what and where.",
+    text: "Whiskers the cat sat by a wheel. When the wind blew, the wheel began to whistle. \"What a strange sound!\" said Whiskers. She wondered where the whistle came from. Then she saw it was just the wind in the wheel.",
+    targets: ["whiskers","wheel","when","whistle","what","where"]
+  }
+];
+
+// Phonic chunking for the "break it into sounds" scaffold — a support, not
+// an answer. Shown when Remi asks for help sounding a word out.
+const STORY_WORD_CHUNKS = {
+  day:'d-ay', play:'pl-ay', away:'a-way', bay:'b-ay', stay:'st-ay', stayed:'stay-ed',
+  sue:'S-ue', blue:'bl-ue', rescue:'res-cue', true:'tr-ue',
+  astronaut:'as-tro-naut', launch:'l-au-nch', august:'au-gust',
+  whiskers:'whisk-ers', wheel:'wh-eel', when:'wh-en', whistle:'whis-tle', what:'wh-at', where:'wh-ere'
+};
+
+let mode = 'hunt';
+
+// hunt state
+let huntStage = 1;
+let huntDeck = [];
+let huntIdx = 0;
+let huntSelected = [];
+let huntSolved = false;
+let huntStars = 0;
+let huntTargetIdx = 0;
+let huntTargetHit = false;
+let huntPendingMilestone = false;
+
+// story state
+let storyIdx = 0;
+let storyFound = new Set();
+let storyStarsEarned = new Array(STORIES.length).fill(false); // true once ALL 3 phases are done
+let storyPhase = 'hunt'; // 'hunt' -> 'reading' -> 'spelling' -> 'done'
+
+// reading-challenge phase state
+let readingWords = [];
+let readingIdx = 0;
+let readingOptions = [];
+let readingHelped = false;
+let readingMistakes = 0;
+let readingAnswered = false;
+
+// story-end spelling phase state
+let storySpellWords = [];
+let storySpellIdx = 0;
+let storySpellAttempts = 0;
+let storySpellSolved = false;
+let storySpellRevealed = false;
+let storySpellClued = false;
+
+// spelling state
+let spellStage = 1;
+let spellDeck = [];
+let spellIdx = 0;
+let spellAttempts = 0;
+let spellSolved = false;
+let spellClued = false;
+let spellRevealed = false;
+let spellStars = 0;
+let spellTargetIdx = 0;
+let spellTargetHit = false;
+let spellPendingMilestone = false;
+
+const TOTAL_STARS = WORDS.length + STORIES.length + WORDS.length; // 46
+
+// ---------- persistent progress (for the Parent dashboard) ----------
+let parentUnlocked = false;
+let gateAnswer = null;
+let progress = {
+  wordStats: {},      // { word: { correct: n, wrong: n } }
+  graphemeStats: {},  // { grapheme: { correct: n, wrong: n } }
+  storiesCompleted: {}, // { title: true }
+  lifetimeStars: 0,
+  sessions: [],        // array of ISO date strings, one per visit
+  lastPlayed: null
+};
+
+function ensureWordStat(word){ if(!progress.wordStats[word]) progress.wordStats[word] = { correct:0, wrong:0, helped:0, grapheme:null }; return progress.wordStats[word]; }
+function ensureGraphemeStat(g){ if(!progress.graphemeStats[g]) progress.graphemeStats[g] = { correct:0, wrong:0 }; return progress.graphemeStats[g]; }
+
+let storageAvailable = true;
+let storageAttemptedAndFailed = false;
+
+async function saveProgress(){
+  progress.lastPlayed = new Date().toISOString();
+  if(!window.storage || typeof window.storage.set !== 'function' || storageAttemptedAndFailed){
+    storageAvailable = false;
+    return;
+  }
+  try{
+    await window.storage.set('remi-phonics-progress', JSON.stringify(progress), false);
+    storageAvailable = true;
+  } catch(e){
+    storageAvailable = false;
+    storageAttemptedAndFailed = true; // don't keep hammering a broken connection
+    console.error('Could not save progress — Remi\'s stars for this visit won\'t carry over.', e);
+  }
+}
+
+async function loadProgress(){
+  if(!window.storage || typeof window.storage.get !== 'function'){
+    storageAvailable = false;
+  } else {
+    try{
+      const res = await window.storage.get('remi-phonics-progress', false);
+      if(res && res.value){
+        const loaded = JSON.parse(res.value);
+        progress = Object.assign(progress, loaded);
+      }
+    } catch(e){
+      // No saved progress yet (first-ever visit) — that's expected, not a failure.
+    }
+  }
+  progress.sessions = progress.sessions || [];
+  progress.sessions.push(new Date().toISOString());
+  if(progress.sessions.length > 40) progress.sessions = progress.sessions.slice(-40);
+  saveProgress();
+}
+
+function recordCorrect(word, grapheme, isFull){
+  const w = ensureWordStat(word); w.correct++; w.grapheme = grapheme;
+  const g = ensureGraphemeStat(grapheme); g.correct++;
+  progress.lifetimeStars += isFull ? 1 : 0.5;
+  saveProgress();
+}
+function recordWrong(word, grapheme){
+  const w = ensureWordStat(word); w.wrong++; w.grapheme = grapheme;
+  ensureGraphemeStat(grapheme).wrong++;
+  saveProgress();
+}
+function recordHint(word, grapheme){
+  const w = ensureWordStat(word); w.helped++;
+  if(grapheme) w.grapheme = grapheme;
+  saveProgress();
+}
+function recordStoryComplete(title, grapheme){
+  if(!progress.storiesCompleted[title]){
+    progress.storiesCompleted[title] = true;
+    progress.lifetimeStars += 1;
+  }
+  ensureGraphemeStat(grapheme).correct++;
+  saveProgress();
+}
+// Tracks individual word taps during Story Time (hits and misses) so they
+// show up in the Parent dashboard's grapheme table and tricky-words list.
+// Deliberately doesn't touch lifetimeStars — the star for a story is
+// already awarded once, via recordStoryComplete, when it's finished.
+const STORY_STOPWORDS = new Set(['the','a','an','and','was','were','said','her','she','he','his','it','up','on','in','to','of','that','this','with','went','from','then','just','saw','put','is','are','as','at','by','out','over','all','a','i','they']);
+function recordStoryWordResult(word, grapheme, correct){
+  if(!correct && (STORY_STOPWORDS.has(word) || word.length < 3)) return;
+  const w = ensureWordStat(word); w.grapheme = grapheme;
+  const g = ensureGraphemeStat(grapheme);
+  if(correct){ w.correct++; g.correct++; } else { w.wrong++; g.wrong++; }
+  saveProgress();
+}
+
+const gameEl = document.getElementById('game');
+const starCountEl = document.getElementById('starCount');
+const progressFill = document.getElementById('progressFill');
+const rocketMarker = document.getElementById('rocketMarker');
+const planets = [document.getElementById('p1'), document.getElementById('p2'), document.getElementById('p3')];
+const subtitleText = document.getElementById('subtitleText');
+
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.85; u.pitch = 1.05;
+  window.speechSynthesis.speak(u);
+}
+function confettiBurst(el, count){
+  count = count || 8;
+  const pieces = ['🎉','🌟','✨','🎊','⭐'];
+  const burst = document.createElement('div');
+  burst.className = 'confetti-burst';
+  for(let i=0;i<count;i++){
+    const span = document.createElement('span');
+    span.className = 'confetti-piece';
+    span.textContent = pieces[Math.floor(Math.random()*pieces.length)];
+    span.style.setProperty('--dx', (Math.random()*200-100) + 'px');
+    span.style.setProperty('--rot', (Math.random()*360-180) + 'deg');
+    span.style.animationDelay = (Math.random()*0.15) + 's';
+    burst.appendChild(span);
+  }
+  el.appendChild(burst);
+  setTimeout(() => burst.remove(), 1300);
+}
+
+function totalStars(){ return huntStars + storyStarsEarned.filter(Boolean).length + spellStars; }
+
+function updateProgress(){
+  const total = totalStars();
+  const pct = (total / TOTAL_STARS) * 100;
+  progressFill.style.width = pct + '%';
+  rocketMarker.style.left = pct + '%';
+  const displayTotal = Number.isInteger(total) ? total : total.toFixed(1);
+  starCountEl.textContent = `⭐ ${displayTotal} / ${TOTAL_STARS} stars`;
+  planets.forEach((p, i) => {
+    const threshold = (i+1) * (TOTAL_STARS/3);
+    p.classList.toggle('reached', total >= threshold);
+  });
+  document.getElementById('tabHunt').classList.toggle('active', mode==='hunt');
+  document.getElementById('tabStory').classList.toggle('active', mode==='story');
+  document.getElementById('tabSpell').classList.toggle('active', mode==='spell');
+  document.getElementById('tabParent').classList.toggle('active', mode==='parent');
+}
+
+function switchMode(m){
+  mode = m;
+  if(m==='hunt'){ subtitleText.textContent = "Tap the letters that make one sound — swing through the jungle collecting stars!"; if(huntDeck.length===0){ startHuntStage(huntStage); } else { renderHunt(); } }
+  if(m==='story'){ subtitleText.textContent = "Read the story, then tap every word with the sound you're hunting for."; resumeStory(); }
+  if(m==='spell'){ subtitleText.textContent = "Listen carefully, then type the word yourself. You've got this!"; if(spellDeck.length===0){ startSpellStage(spellStage); } else { renderSpell(); } }
+  if(m==='parent'){ subtitleText.textContent = "A quick look at how Remi's getting on."; renderParent(); }
+  updateProgress();
+}
+
+/* ================= SOUND HUNT ================= */
+let huntStagesDone = {1:false, 2:false, 3:false};
+
+function stageNavHtml(kind, current, doneMap){
+  return `<div class="stage-nav">${[1,2,3].map(s => {
+    const info = STAGE_INFO[s];
+    const cls = `${s===current?'active':''} ${doneMap[s]?'done':''}`.trim();
+    const fn = kind==='hunt' ? `startHuntStage(${s})` : `startSpellStage(${s})`;
+    return `<button class="stage-btn ${cls}" onclick="${fn}">${info.emoji} ${info.label}</button>`;
+  }).join('')}</div>`;
+}
+function stageProgressHtml(deckLen, targetIdx){
+  const flagPct = Math.min(100, (targetIdx / deckLen) * 100);
+  return `
+    <div class="stage-progress-track">
+      <div class="stage-progress-shell"><div class="stage-progress-fill" id="stageProgressFill" style="width:0%"></div></div>
+      <div class="stage-target-marker" style="left:${flagPct}%;">🚩</div>
+      <div class="stage-target-marker" style="left:100%;">🏆</div>
+    </div>`;
+}
+function updateStageProgress(count, deckLen){
+  const fill = document.getElementById('stageProgressFill');
+  if(fill) fill.style.width = Math.min(100, (count/deckLen)*100) + '%';
+}
+
+function startHuntStage(stage){
+  huntStage = stage;
+  huntDeck = shuffle(WORDS.map((w,i)=>i).filter(i => WORDS[i].stage === stage));
+  huntIdx = 0;
+  huntTargetIdx = Math.max(1, Math.ceil(huntDeck.length / 2));
+  huntTargetHit = false;
+  renderHunt();
+}
+function renderHunt(){
+  huntSelected = []; huntSolved = false;
+  const item = WORDS[huntDeck[huntIdx]];
+  const letters = item.word.split('');
+  let tilesHtml = letters.map((l,i) => `<div class="tile" data-i="${i}" onclick="toggleTile(${i})">${l}</div>`).join('');
+  gameEl.innerHTML = `
+    <div class="card">
+      ${stageNavHtml('hunt', huntStage, huntStagesDone)}
+      <p class="stage-desc">${STAGE_INFO[huntStage].desc}</p>
+      ${stageProgressHtml(huntDeck.length, huntTargetIdx)}
+      <p class="instruction">Word <b>${huntIdx+1} / ${huntDeck.length}</b> — tap the letters that make <b>one sound</b> together.</p>
+      <div class="word-row" id="wordRow">${tilesHtml}</div>
+      <div class="controls">
+        <button class="btn-sound" onclick="speak('${item.word}')">🔊 Hear the word</button>
+        <button class="btn-check" id="checkBtn" onclick="checkHunt()">✅ Check</button>
+      </div>
+      <div class="feedback" id="feedback"></div>
+    </div>`;
+  updateStageProgress(huntIdx, huntDeck.length);
+}
+function toggleTile(i){
+  if(huntSolved) return;
+  const tile = document.querySelector(`.tile[data-i="${i}"]`);
+  if(huntSelected.includes(i)){ huntSelected = huntSelected.filter(x => x !== i); tile.classList.remove('selected'); }
+  else { huntSelected.push(i); tile.classList.add('selected'); }
+}
+function checkHunt(){
+  if(huntSolved) return;
+  const item = WORDS[huntDeck[huntIdx]];
+  const target = [...item.target].sort();
+  const chosen = [...huntSelected].sort();
+  const isCorrect = target.length === chosen.length && target.every((v,i) => v === chosen[i]);
+  const feedback = document.getElementById('feedback');
+  if(isCorrect){
+    huntSolved = true; huntStars++; updateProgress();
+    recordCorrect(item.word, item.grapheme, true);
+    target.forEach(i => { const t = document.querySelector(`.tile[data-i="${i}"]`); t.classList.remove('selected'); t.classList.add('correct'); });
+    speak(item.word);
+    updateStageProgress(huntIdx+1, huntDeck.length);
+    const willHitTarget = !huntTargetHit && (huntIdx + 1) >= huntTargetIdx;
+    if(willHitTarget) huntTargetHit = true;
+    feedback.innerHTML = `
+      <div class="grapheme-fact">🌟 Well done! <b>${item.grapheme}</b> — ${item.fact}</div>
+      <div class="controls" style="margin-top:12px;"><button class="btn-next" onclick="proceedHuntAfterCorrect(${willHitTarget})">${willHitTarget ? 'Continue ➡️' : 'Next word ➡️'}</button></div>`;
+    confettiBurst(feedback, 6);
+    document.getElementById('checkBtn').disabled = true;
+  } else {
+    recordWrong(item.word, item.grapheme);
+    huntSelected.forEach(i => { const t = document.querySelector(`.tile[data-i="${i}"]`); t.classList.add('wrong-shake'); setTimeout(() => t.classList.remove('wrong-shake','selected'), 400); });
+    huntSelected = [];
+    feedback.innerHTML = `<div class="hint">Not quite — try again! Listen to the word again and see if you can spot the letters that team up.</div>`;
+  }
+}
+function proceedHuntAfterCorrect(hitTarget){
+  if(hitTarget) showHuntMilestone(); else nextHunt();
+}
+function showHuntMilestone(){
+  const remaining = huntDeck.length - huntIdx - 1;
+  gameEl.innerHTML = `
+    <div class="milestone-card">
+      <div class="milestone-inner" id="huntMilestone">
+        <span class="big">🎯</span>
+        <h2>Target reached!</h2>
+        <p>Halfway through ${STAGE_INFO[huntStage].label} — ${remaining} word${remaining===1?'':'s'} to go!</p>
+        <div class="controls" style="margin-top:10px;"><button class="btn-next" onclick="continueHuntAfterMilestone()">Keep going! ➡️</button></div>
+      </div>
+    </div>`;
+  confettiBurst(document.getElementById('huntMilestone'), 14);
+}
+function continueHuntAfterMilestone(){
+  if(huntIdx < huntDeck.length - 1){ huntIdx++; renderHunt(); } else { finishHuntStage(); }
+}
+function nextHunt(){
+  if(huntIdx < huntDeck.length - 1){ huntIdx++; renderHunt(); } else { finishHuntStage(); }
+}
+function finishHuntStage(){
+  huntStagesDone[huntStage] = true;
+  if(huntStage < 3){
+    const nextStage = huntStage + 1;
+    gameEl.innerHTML = `
+      <div class="milestone-card">
+        <div class="milestone-inner" id="huntStageFinale">
+          <span class="big">🏆</span>
+          <h2>${STAGE_INFO[huntStage].label} complete!</h2>
+          <p>On to ${STAGE_INFO[nextStage].emoji} ${STAGE_INFO[nextStage].label} next.</p>
+          <div class="controls" style="margin-top:10px;"><button class="btn-next" onclick="startHuntStage(${nextStage})">Next stage ➡️</button></div>
+        </div>
+      </div>`;
+    confettiBurst(document.getElementById('huntStageFinale'), 16);
+  } else {
+    gameEl.innerHTML = finaleHtml("You collected every sound star, Remi!", "restartHunt()");
+    confettiBurst(gameEl, 20);
+  }
+}
+function restartHunt(){
+  huntStagesDone = {1:false, 2:false, 3:false};
+  huntStars = 0; updateProgress();
+  startHuntStage(1);
+}
+
+/* ================= STORY TIME ================= */
+// Re-entering the Story tab should pick up wherever Remi left off, not
+// reset him back to the word hunt — otherwise switching tabs becomes its
+// own kind of loophole out of the reading/spelling challenges.
+function resumeStory(){
+  if(storyPhase === 'hunt-done') renderHuntDone();
+  else if(storyPhase === 'reading') renderReadingChallenge();
+  else if(storyPhase === 'spelling') renderStorySpell();
+  else renderStory();
+}
+function renderStory(){
+  storyFound = new Set();
+  storyPhase = 'hunt';
+  const s = STORIES[storyIdx];
+  const words = s.text.split(/(\s+)/); // keep whitespace tokens
+  const html = words.map(tok => {
+    if(/^\s+$/.test(tok)) return tok;
+    const clean = tok.toLowerCase().replace(/[^a-z']/g, '');
+    if(!clean) return tok;
+    const isTarget = s.targets.includes(clean);
+    return `<span class="word" data-clean="${clean}" data-target="${isTarget}" onclick="tapStoryWord(this)">${tok}</span>`;
+  }).join('');
+
+  const dots = STORIES.map((st,i) => `<span class="story-dot ${storyStarsEarned[i] ? 'done' : ''}"></span>`).join('');
+
+  gameEl.innerHTML = `
+    <div class="card">
+      <p class="phase-label">🔍 Step 1: Sound Hunt</p>
+      <p class="story-title">${s.title}</p>
+      <div class="controls" style="margin-bottom:10px;">
+        <button class="btn-sound" id="storyReadBtn">🔊 Read story aloud</button>
+      </div>
+      <p class="story-progress">Find every word with <b style="color:var(--star)">${s.grapheme}</b> — <span id="storyFoundCount">0</span> / ${new Set(s.targets).size} found</p>
+      <div class="story-text" id="storyText">${html}</div>
+      <div class="feedback" id="feedback"></div>
+      <div class="story-nav">${dots}</div>
+    </div>`;
+  // Attach via listener rather than an inline onclick attribute — story text
+  // contains quotation marks (dialogue), which would break a quoted HTML attribute.
+  document.getElementById('storyReadBtn').addEventListener('click', () => speak(s.text));
+}
+function tapStoryWord(el){
+  const s = STORIES[storyIdx];
+  const clean = el.dataset.clean;
+  const isTarget = el.dataset.target === 'true';
+  if(isTarget){
+    if(!el.classList.contains('found')){
+      el.classList.add('found');
+      storyFound.add(clean);
+      recordStoryWordResult(clean, s.grapheme, true);
+    }
+  } else {
+    el.classList.add('miss');
+    setTimeout(() => el.classList.remove('miss'), 400);
+    recordStoryWordResult(clean, s.grapheme, false);
+  }
+  const uniqueTargets = new Set(s.targets);
+  const foundCountEl = document.getElementById('storyFoundCount');
+  if(foundCountEl) foundCountEl.textContent = storyFound.size;
+
+  if(storyFound.size >= uniqueTargets.size && storyPhase === 'hunt'){
+    storyPhase = 'hunt-done';
+    renderHuntDone();
+  }
+}
+function renderHuntDone(){
+  const s = STORIES[storyIdx];
+  gameEl.innerHTML = `
+    <div class="card">
+      <p class="phase-label">🔍 Step 1: Sound Hunt — complete!</p>
+      <p class="story-title">${s.title}</p>
+      <div class="feedback" id="feedback"><div class="grapheme-fact">🌟 Great spotting! ${s.fact}</div></div>
+      <div class="controls" style="margin-top:12px;"><button class="btn-next" onclick="startReadingChallenge()">Continue to Reading Challenge 📖➡️</button></div>
+    </div>`;
+  confettiBurst(document.getElementById('feedback'), 8);
+}
+
+/* ---- Phase 2: Reading Challenge ----
+   Remi reads each word himself. "Break it into sounds" only ever scaffolds
+   the word into phonic chunks — it never answers the question for him, and
+   he still has to correctly identify the word afterwards to move on. A
+   wrong guess disables that option (no repeat-clicking it) and forces the
+   phonic breakdown open, so there's no way to pass by random tapping. */
+function buildReadingOptions(correctWord, story){
+  const sameStoryPool = [...new Set(story.targets)].filter(w => w !== correctWord);
+  let distractors = shuffle(sameStoryPool).slice(0, 3);
+  if(distractors.length < 3){
+    const others = STORIES.flatMap(st => [...new Set(st.targets)]).filter(w => w !== correctWord && !distractors.includes(w));
+    distractors = distractors.concat(shuffle(others).slice(0, 3 - distractors.length));
+  }
+  return shuffle([correctWord, ...distractors]);
+}
+function startReadingChallenge(){
+  storyPhase = 'reading';
+  readingWords = shuffle([...new Set(STORIES[storyIdx].targets)]);
+  readingIdx = 0;
+  renderReadingChallenge();
+}
+function renderReadingChallenge(){
+  readingHelped = false; readingMistakes = 0; readingAnswered = false;
+  const s = STORIES[storyIdx];
+  const word = readingWords[readingIdx];
+  readingOptions = buildReadingOptions(word, s);
+  gameEl.innerHTML = `
+    <div class="card">
+      <p class="phase-label">📖 Step 2: Reading Challenge · ${readingIdx+1} / ${readingWords.length}</p>
+      <p class="story-progress">Read this word out loud, then tap what it says.</p>
+      <p class="read-word">${word}</p>
+      <div id="chunkArea"></div>
+      <div class="controls">
+        <button class="btn-hint" onclick="showChunks()">🤔 Break it into sounds</button>
+      </div>
+      <p class="read-prompt">Which word did you just read?</p>
+      <div class="read-options" id="readOptions">
+        ${readingOptions.map(o => `<div class="read-option-btn" data-val="${o}" onclick="pickReadOption(this)">${o}</div>`).join('')}
+      </div>
+      <div class="feedback" id="feedback"></div>
+    </div>`;
+}
+function showChunks(){
+  const word = readingWords[readingIdx];
+  const chunks = STORY_WORD_CHUNKS[word] || word;
+  const area = document.getElementById('chunkArea');
+  if(area) area.innerHTML = `<p class="chunk-display">${chunks}</p>`;
+  if(!readingHelped){ readingHelped = true; recordHint(word, STORIES[storyIdx].grapheme); }
+}
+function pickReadOption(el){
+  if(readingAnswered) return;
+  const val = el.dataset.val;
+  const word = readingWords[readingIdx];
+  const feedback = document.getElementById('feedback');
+  const s = STORIES[storyIdx];
+  if(val === word){
+    readingAnswered = true;
+    el.classList.add('correct');
+    const isFull = !readingHelped && readingMistakes === 0;
+    recordCorrect(word, s.grapheme, isFull);
+    confettiBurst(feedback, 6);
+    feedback.innerHTML = `
+      <div class="grapheme-fact">🌟 ${isFull ? 'Well read!' : 'Got there — nice work!'} "${word}"</div>
+      <div class="controls" style="margin-top:12px;"><button class="btn-next" onclick="nextReadingWord()">Next word ➡️</button></div>`;
+  } else {
+    readingMistakes++;
+    el.classList.add('wrong'); // stays disabled — no re-clicking the same wrong option
+    recordWrong(word, s.grapheme);
+    showChunks(); // a wrong guess forces the scaffold open — no more silent guessing
+    feedback.innerHTML = `<div class="hint">Not quite — look at the sounds and try again.</div>`;
+  }
+}
+function nextReadingWord(){
+  if(readingIdx < readingWords.length - 1){ readingIdx++; renderReadingChallenge(); }
+  else { startStorySpelling(); }
+}
+
+/* ---- Phase 3: Spelling Challenge ----
+   Same anti-shortcut rules as Spelling Stars: wrong guesses never
+   auto-advance, and even a revealed word must be typed correctly before
+   moving on. */
+function startStorySpelling(){
+  storyPhase = 'spelling';
+  storySpellWords = shuffle([...new Set(STORIES[storyIdx].targets)]);
+  storySpellIdx = 0;
+  renderStorySpell();
+}
+function renderStorySpell(){
+  storySpellSolved = false; storySpellAttempts = 0; storySpellClued = false; storySpellRevealed = false;
+  const word = storySpellWords[storySpellIdx];
+  gameEl.innerHTML = `
+    <div class="card">
+      <p class="phase-label">✏️ Step 3: Spelling Challenge · ${storySpellIdx+1} / ${storySpellWords.length}</p>
+      <p class="story-progress">Listen carefully, then spell the word.</p>
+      <div class="spell-prompt"><button class="btn-sound" onclick="speak('${word}')">🔊 Hear the word</button></div>
+      <input type="text" class="spell-input" id="storySpellInput" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type here" />
+      <div class="controls" style="margin-top:14px;">
+        <button class="btn-check" onclick="checkStorySpell()">✅ Check</button>
+      </div>
+      <div class="feedback" id="feedback"></div>
+    </div>`;
+  document.getElementById('storySpellInput').addEventListener('keydown', e => { if(e.key === 'Enter') checkStorySpell(); });
+  speak(word);
+}
+// Finds where the story's target grapheme sits inside a word, so the clue
+// stage can reveal just that chunk in place rather than the whole word.
+function findGraphemeIndices(word, grapheme){
+  const idx = word.toLowerCase().indexOf(grapheme.toLowerCase());
+  if(idx === -1) return [];
+  return Array.from({length: grapheme.length}, (_, i) => idx + i);
+}
+function checkStorySpell(){
+  if(storySpellSolved) return;
+  const word = storySpellWords[storySpellIdx];
+  const s = STORIES[storyIdx];
+  const input = document.getElementById('storySpellInput');
+  const guess = input.value.trim().toLowerCase();
+  const feedback = document.getElementById('feedback');
+
+  if(!guess){ feedback.innerHTML = `<div class="hint">Type your best guess first, then hit Check.</div>`; return; }
+
+  if(guess === word){
+    storySpellSolved = true;
+    recordCorrect(word, s.grapheme, !storySpellRevealed);
+    input.style.borderColor = 'var(--green)'; input.disabled = true;
+    confettiBurst(feedback, 6);
+    const label = storySpellRevealed ? '🌟 Nice — you copied it correctly!' : '🌟 Spelled it right, all by yourself!';
+    feedback.innerHTML = `
+      <div class="grapheme-fact">${label}</div>
+      <div class="controls" style="margin-top:12px;"><button class="btn-next" onclick="nextStorySpellWord()">Next word ➡️</button></div>`;
+    return;
+  }
+
+  storySpellAttempts++;
+  recordWrong(word, s.grapheme);
+  input.style.borderColor = '#F3A6A0';
+  input.classList.add('wrong-shake');
+  setTimeout(() => input.classList.remove('wrong-shake'), 400);
+
+  const graphemeIdx = findGraphemeIndices(word, s.grapheme);
+  if(storySpellAttempts <= 2){
+    const msgs = ["Not quite — listen again and try once more!", "So close — sound it out slowly, one bit at a time."];
+    feedback.innerHTML = `<div class="hint">${msgs[storySpellAttempts-1] || msgs[0]}</div>`;
+  } else if(storySpellAttempts === 3 && !storySpellClued && graphemeIdx.length){
+    // Gentle middle step — show just the target sound in place, the rest stays blank.
+    storySpellClued = true;
+    recordHint(word, s.grapheme);
+    const shape = buildWordShapeClue(word, graphemeIdx);
+    feedback.innerHTML = `<div class="hint">Here's a clue — the <b style="color:var(--star)">${s.grapheme}</b> sound is shown, you fill in the rest:</div><div class="spell-answer-shown">${shape}</div>`;
+  } else if(!storySpellRevealed){
+    storySpellRevealed = true;
+    recordHint(word, s.grapheme);
+    const chunks = STORY_WORD_CHUNKS[word] || word.split('').join(' ');
+    feedback.innerHTML = `<div class="hint">Look closely, then type it below to move on:</div><div class="spell-answer-shown">${chunks}</div>`;
+  } else {
+    feedback.innerHTML = `<div class="hint">Type it exactly as shown above to move on.</div>`;
+  }
+}
+function nextStorySpellWord(){
+  if(storySpellIdx < storySpellWords.length - 1){ storySpellIdx++; renderStorySpell(); }
+  else { finishStory(); }
+}
+
+function finishStory(){
+  storyPhase = 'done';
+  storyStarsEarned[storyIdx] = true;
+  const s = STORIES[storyIdx];
+  recordStoryComplete(s.title, s.grapheme);
+  updateProgress();
+  const isLast = storyIdx === STORIES.length - 1;
+  gameEl.innerHTML = `
+    <div class="milestone-card">
+      <div class="milestone-inner" id="storyFinale">
+        <span class="big">🏆</span>
+        <h2>${s.title} — complete!</h2>
+        <p>${s.fact}</p>
+        <div class="controls" style="margin-top:12px;">
+          <button class="btn-next" onclick="${isLast ? 'restartStories()' : 'goToNextStory()'}">${isLast ? '🔁 Play again' : 'Next story ➡️'}</button>
+        </div>
+      </div>
+    </div>`;
+  confettiBurst(document.getElementById('storyFinale'), 16);
+}
+function goToNextStory(){ storyIdx++; renderStory(); }
+function restartStories(){ storyIdx = 0; storyStarsEarned = new Array(STORIES.length).fill(false); updateProgress(); renderStory(); }
+
+/* ================= SPELLING STARS ================= */
+let spellStagesDone = {1:false, 2:false, 3:false};
+let spellSessionProgress = 0;
+
+function startSpellStage(stage){
+  spellStage = stage;
+  spellDeck = shuffle(WORDS.map((w,i)=>i).filter(i => WORDS[i].stage === stage));
+  spellIdx = 0;
+  spellSessionProgress = 0;
+  spellTargetIdx = Math.max(1, Math.ceil(spellDeck.length / 2));
+  spellTargetHit = false;
+  renderSpell();
+}
+function renderSpell(){
+  spellSolved = false; spellAttempts = 0; spellClued = false; spellRevealed = false;
+  const item = WORDS[spellDeck[spellIdx]];
+  gameEl.innerHTML = `
+    <div class="card">
+      ${stageNavHtml('spell', spellStage, spellStagesDone)}
+      <p class="stage-desc">${STAGE_INFO[spellStage].desc}</p>
+      ${stageProgressHtml(spellDeck.length, spellTargetIdx)}
+      <p class="instruction">Word <b>${spellIdx+1} / ${spellDeck.length}</b> — listen carefully, then spell the word.</p>
+      <div class="spell-prompt">
+        <button class="btn-sound" onclick="speak('${item.word}')">🔊 Hear the word</button>
+      </div>
+      <input type="text" class="spell-input" id="spellInput" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type here" />
+      <div class="controls" style="margin-top:14px;">
+        <button class="btn-check" onclick="checkSpell()">✅ Check</button>
+        <button class="btn-hint" id="hintBtn" onclick="showHint()">💡 Hint</button>
+      </div>
+      <div class="feedback" id="feedback"></div>
+    </div>`;
+  document.getElementById('spellInput').addEventListener('keydown', e => { if(e.key === 'Enter') checkSpell(); });
+  updateStageProgress(spellSessionProgress, spellDeck.length);
+  speak(item.word);
+}
+function showHint(){
+  const item = WORDS[spellDeck[spellIdx]];
+  recordHint(item.word, item.grapheme);
+  document.getElementById('feedback').innerHTML = `<div class="hint">This word has the <b style="color:var(--star)">${item.grapheme}</b> sound in it. It starts with "${item.word[0]}".</div>`;
+}
+function buildWordShapeClue(word, target){
+  return word.split('').map((l,i) => target.includes(i) ? `<span class="g">${l}</span>` : '_').join(' ');
+}
+function checkSpell(){
+  if(spellSolved) return;
+  const item = WORDS[spellDeck[spellIdx]];
+  const input = document.getElementById('spellInput');
+  const guess = input.value.trim().toLowerCase();
+  const feedback = document.getElementById('feedback');
+
+  if(!guess){
+    feedback.innerHTML = `<div class="hint">Type your best guess first, then hit Check.</div>`;
+    return;
+  }
+
+  if(guess === item.word){
+    // Only counts as a genuine win if he actually typed the real word.
+    spellSolved = true;
+    // Full star only if he hadn't already been shown the answer outright.
+    const gained = spellRevealed ? 0.5 : 1;
+    spellStars += gained;
+    spellSessionProgress += gained;
+    recordCorrect(item.word, item.grapheme, !spellRevealed);
+    updateProgress();
+    updateStageProgress(spellSessionProgress, spellDeck.length);
+    input.style.borderColor = 'var(--green)';
+    input.disabled = true;
+    const label = spellRevealed ? '🌟 Nice — you copied it correctly! Now try to remember it next time.' : '🌟 Spelled it right, all by yourself!';
+    const willHitTarget = !spellTargetHit && (spellIdx + 1) >= spellTargetIdx;
+    if(willHitTarget) spellTargetHit = true;
+    feedback.innerHTML = `
+      <div class="grapheme-fact">${label} <b>${item.grapheme}</b> — ${item.fact}</div>
+      <div class="controls" style="margin-top:12px;"><button class="btn-next" onclick="proceedSpellAfterCorrect(${willHitTarget})">${willHitTarget ? 'Continue ➡️' : 'Next word ➡️'}</button></div>`;
+    confettiBurst(feedback, 6);
+    return;
+  }
+
+  // Wrong guess — never auto-advance, and never hand over a free skip.
+  spellAttempts++;
+  recordWrong(item.word, item.grapheme);
+  input.style.borderColor = '#F3A6A0';
+  input.classList.add('wrong-shake');
+  setTimeout(() => input.classList.remove('wrong-shake'), 400);
+
+  if(spellAttempts <= 2){
+    const msgs = [
+      "Not quite — listen again and try once more!",
+      "So close — sound it out slowly, one bit at a time."
+    ];
+    feedback.innerHTML = `<div class="hint">${msgs[spellAttempts-1] || msgs[0]}</div>`;
+  } else if(spellAttempts === 3 && !spellClued){
+    // A gentle middle step: show just the tricky sound in place, everything
+    // else stays blank. Not the answer — just enough to stop him feeling stuck.
+    spellClued = true;
+    recordHint(item.word, item.grapheme);
+    const shape = buildWordShapeClue(item.word, item.target);
+    feedback.innerHTML = `<div class="hint">Here's a clue — the <b style="color:var(--star)">${item.grapheme}</b> sound is shown, you fill in the rest:</div><div class="spell-answer-shown">${shape}</div>`;
+  } else if(!spellRevealed){
+    // Still stuck after the clue — now show the whole word so he doesn't
+    // stay discouraged. He still has to type it correctly to move on.
+    spellRevealed = true;
+    recordHint(item.word, item.grapheme);
+    const highlighted = item.word.split('').map((l,i) => item.target.includes(i) ? `<span class="g">${l}</span>` : l).join('');
+    feedback.innerHTML = `<div class="hint">Look closely at the word, then type it below to move on:</div><div class="spell-answer-shown">${highlighted}</div>`;
+  } else {
+    feedback.innerHTML = `<div class="hint">Type it exactly as shown above to move on.</div>`;
+  }
+}
+function proceedSpellAfterCorrect(hitTarget){
+  if(hitTarget) showSpellMilestone(); else nextSpell();
+}
+function showSpellMilestone(){
+  const remaining = spellDeck.length - spellIdx - 1;
+  gameEl.innerHTML = `
+    <div class="milestone-card">
+      <div class="milestone-inner" id="spellMilestone">
+        <span class="big">🎯</span>
+        <h2>Target reached!</h2>
+        <p>Halfway through ${STAGE_INFO[spellStage].label} — ${remaining} word${remaining===1?'':'s'} to go!</p>
+        <div class="controls" style="margin-top:10px;"><button class="btn-next" onclick="continueSpellAfterMilestone()">Keep going! ➡️</button></div>
+      </div>
+    </div>`;
+  confettiBurst(document.getElementById('spellMilestone'), 14);
+}
+function continueSpellAfterMilestone(){
+  if(spellIdx < spellDeck.length - 1){ spellIdx++; renderSpell(); } else { finishSpellStage(); }
+}
+function nextSpell(){
+  if(spellIdx < spellDeck.length - 1){ spellIdx++; renderSpell(); } else { finishSpellStage(); }
+}
+function finishSpellStage(){
+  spellStagesDone[spellStage] = true;
+  if(spellStage < 3){
+    const nextStage = spellStage + 1;
+    gameEl.innerHTML = `
+      <div class="milestone-card">
+        <div class="milestone-inner" id="spellStageFinale">
+          <span class="big">🏆</span>
+          <h2>${STAGE_INFO[spellStage].label} complete!</h2>
+          <p>On to ${STAGE_INFO[nextStage].emoji} ${STAGE_INFO[nextStage].label} next.</p>
+          <div class="controls" style="margin-top:10px;"><button class="btn-next" onclick="startSpellStage(${nextStage})">Next stage ➡️</button></div>
+        </div>
+      </div>`;
+    confettiBurst(document.getElementById('spellStageFinale'), 16);
+  } else {
+    gameEl.innerHTML = finaleHtml("You spelled every tricky word, Remi!", "restartSpell()");
+    confettiBurst(gameEl, 20);
+  }
+}
+function restartSpell(){
+  spellStagesDone = {1:false, 2:false, 3:false};
+  spellStars = 0; updateProgress();
+  startSpellStage(1);
+}
+
+/* ================= PARENTS ================= */
+function renderParent(){
+  if(!parentUnlocked){ renderParentGate(); return; }
+  renderParentDashboard();
+}
+function renderParentGate(message){
+  const a = Math.floor(Math.random()*8)+4;
+  const b = Math.floor(Math.random()*8)+3;
+  gateAnswer = a + b;
+  gameEl.innerHTML = `
+    <div class="card gate-box">
+      <p style="font-size:1.5rem;">🔒</p>
+      <p class="instruction">Grown-up check</p>
+      <p>What is <b style="color:var(--star)">${a} + ${b}</b>?</p>
+      <input type="number" class="gate-input" id="gateInput" />
+      <div class="controls" style="margin-top:14px;">
+        <button class="btn-check" onclick="unlockParent()">Unlock</button>
+      </div>
+      <div class="feedback" id="feedback">${message ? `<div class="hint">${message}</div>` : ''}</div>
+    </div>`;
+  const gateInput = document.getElementById('gateInput');
+  gateInput.addEventListener('keydown', e => { if(e.key==='Enter') unlockParent(); });
+  gateInput.focus();
+}
+function unlockParent(){
+  const val = parseInt(document.getElementById('gateInput').value, 10);
+  if(val === gateAnswer){ parentUnlocked = true; renderParentDashboard(); }
+  else { renderParentGate('Not quite — try this new sum.'); }
+}
+function statusFor(stats){
+  if(!stats || (stats.correct + stats.wrong) === 0) return { label:'Not tried yet', cls:'status-support' };
+  const total = stats.correct + stats.wrong;
+  const rate = stats.correct / total;
+  if(stats.correct >= 2 && rate >= 0.7) return { label:'Mastered', cls:'status-mastered' };
+  if(rate >= 0.4) return { label:'Practising', cls:'status-practising' };
+  return { label:'Needs support', cls:'status-support' };
+}
+function renderParentDashboard(){
+  const allGraphemes = [...new Set(WORDS.map(w => w.grapheme))];
+  const rows = allGraphemes.map(g => {
+    const stats = progress.graphemeStats[g] || { correct:0, wrong:0 };
+    const st = statusFor(stats);
+    return `<tr><td>${g}</td><td>${stats.correct}</td><td>${stats.wrong}</td><td><span class="status-pill ${st.cls}">${st.label}</span></td></tr>`;
+  }).join('');
+
+  const tricky = Object.entries(progress.wordStats)
+    .map(([w, s]) => ({ word: w, wrong: s.wrong || 0, helped: s.helped || 0, grapheme: s.grapheme, needsHelp: (s.wrong||0) + (s.helped||0) }))
+    .filter(item => item.needsHelp > 0)
+    .sort((a, b) => b.needsHelp - a.needsHelp);
+
+  const storiesDone = Object.keys(progress.storiesCompleted || {}).length;
+  const sessionCount = progress.sessions ? progress.sessions.length : 0;
+  const lastPlayed = progress.lastPlayed ? new Date(progress.lastPlayed).toLocaleDateString(undefined, { day:'numeric', month:'short' }) : '—';
+  const lifetime = Number.isInteger(progress.lifetimeStars) ? progress.lifetimeStars : progress.lifetimeStars.toFixed(1);
+
+  gameEl.innerHTML = `
+    <div class="card">
+      <p class="instruction" style="margin-bottom:6px;">Remi's progress so far</p>
+      ${!storageAvailable ? `<p class="empty-note" style="background:rgba(243,166,160,.15); border:1px solid #F3A6A0; border-radius:12px; padding:8px;">⚠️ Progress isn't saving right now (this can happen if the app is opened outside Claude). Numbers below are for this visit only.</p>` : ''}
+      <div class="stat-grid">
+        <div class="stat-box"><div class="num">${lifetime}</div><div class="lbl">all-time stars</div></div>
+        <div class="stat-box"><div class="num">${sessionCount}</div><div class="lbl">sessions played</div></div>
+        <div class="stat-box"><div class="num">${storiesDone} / ${STORIES.length}</div><div class="lbl">stories completed</div></div>
+        <div class="stat-box"><div class="num">${lastPlayed}</div><div class="lbl">last played</div></div>
+      </div>
+      <p class="empty-note" style="margin-top:-6px;">All-time stars add up across every visit. The star bar Remi sees on screen only tracks his current round, so the two numbers won't match.</p>
+
+      <p class="section-title">Sound by sound</p>
+      <table class="grapheme-table">
+        <thead><tr><th>Sound</th><th>Right</th><th>Wrong</th><th>Status</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+
+      <p class="section-title">Words to keep an eye on</p>
+      ${tricky.length ? `<div class="tricky-list">${tricky.map(t => {
+          const g = t.grapheme || '';
+          const bits = [];
+          if(t.wrong) bits.push(`${t.wrong} miss${t.wrong>1?'es':''}`);
+          if(t.helped) bits.push(`${t.helped} hint${t.helped>1?'s':''}`);
+          return `<span class="tricky-chip"><b>${t.word}</b>${g ? ` (${g})` : ''} — ${bits.join(', ')}</span>`;
+        }).join('')}</div>` : `<p class="empty-note">No tricky words flagged yet — nice work!</p>`}
+
+      <div class="controls" style="margin-top:20px;">
+        <button class="btn-hint" onclick="confirmResetProgress()">🗑️ Reset progress</button>
+      </div>
+    </div>`;
+}
+function confirmResetProgress(){
+  gameEl.querySelector('.card').insertAdjacentHTML('beforeend', `
+    <div class="feedback">
+      <div class="hint">This clears all of Remi's saved progress. Are you sure?</div>
+      <div class="controls" style="margin-top:10px;">
+        <button class="btn-next" onclick="doResetProgress()">Yes, reset</button>
+        <button class="btn-hint" onclick="renderParentDashboard()">Cancel</button>
+      </div>
+    </div>`);
+}
+async function doResetProgress(){
+  progress = { wordStats:{}, graphemeStats:{}, storiesCompleted:{}, lifetimeStars:0, sessions: progress.sessions || [], lastPlayed: null };
+  huntStars = 0; spellStars = 0; storyStarsEarned = new Array(STORIES.length).fill(false);
+  huntStagesDone = {1:false, 2:false, 3:false}; spellStagesDone = {1:false, 2:false, 3:false};
+  huntDeck = []; spellDeck = []; huntStage = 1; spellStage = 1; // forces a fresh stage 1 deck next visit
+  await saveProgress();
+  updateProgress();
+  renderParentDashboard();
+}
+
+/* ================= shared ================= */
+function shuffle(arr){
+  for(let i = arr.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i+1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
+}
+function finaleHtml(message, restartFn){
+  return `
+    <div class="card finale">
+      <span class="rocket-big">🦜✨</span>
+      <h2>${message}</h2>
+      <div class="controls" style="margin-top:16px;">
+        <button class="btn-restart" onclick="${restartFn}">🔁 Play again</button>
+      </div>
+    </div>`;
+}
+
+// ---------- init ----------
+loadProgress().then(() => switchMode('hunt'));
+</script>
+</body>
+</html>
